@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>單字王 02 測驗 - EngExam</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-body-tertiary">
+
+  <!-- Column -->
+  <div class="d-flex flex-column min-vh-100">
+
+    <!-- Appbar -->
+    <nav class="navbar bg-body border-bottom sticky-top">
+      <!-- Row: Brand + Spacing + Actions -->
+      <div class="container d-flex align-items-center">
+        <a class="navbar-brand fw-semibold" href="index.html">單字王 02 測驗</a>
+        <div class="flex-grow-1"></div> <!-- Spacing -->
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          <a href="keywordking_intro_02.html" class="btn btn-outline-primary btn-sm">單字</a>
+          <a href="index.html" class="btn btn-outline-secondary btn-sm">離開</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="container flex-grow-1 py-4">
+      <p class="text-secondary mb-4">直接在空格作答，完成後按最下方「交卷」批改。</p>
+
+      <!-- 成績 -->
+      <div id="result" class="d-none mb-4"></div>
+
+      <form id="quiz" autocomplete="off" spellcheck="false">
+
+        <!-- 第一部分 -->
+        <div class="card mb-4">
+          <div class="card-header fw-bold">第一部分：單字中翻英</div>
+          <div class="card-body">
+            <div class="row g-3" id="part1"></div>
+          </div>
+        </div>
+
+        <!-- 第二部分 -->
+        <div class="card mb-4">
+          <div class="card-header fw-bold">第二部分：英文句子填空</div>
+          <div class="card-body">
+            <div class="alert alert-secondary">
+              <p class="mb-2">從下列單字中選出最適合的填入空格，每個字只用一次。部分題目要改成複數、過去式等形態。</p>
+              <div class="d-flex flex-wrap gap-1" id="wordBank"></div>
+            </div>
+            <ol class="list-group list-group-numbered" id="part2"></ol>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mb-3">
+          <button type="button" class="btn btn-outline-secondary d-none" id="retryBtn">重新作答</button>
+          <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">交卷</button>
+        </div>
+      </form>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===== 題目 =====
+const PART1 = [
+  "謠言；傳聞", "厚的；濃的", "去拿來；取來", "缺席的", "香水", "坦白地；老實說", "手術；運作；操作",
+  "麵包", "彎曲；彎腰", "謙虛的；卑微的", "目錄；型錄", "暴風雨", "粗心的", "資格；學歷證書",
+  "爆裂；突然發生", "逃避者；躲避者", "場景；現場", "稱讚；讚美", "方式；態度；（複數）禮貌"
+];
+const WORDS = ["storm","fetch","humble","catalog","absent","burst","perfume","manner","careless","rumour",
+  "thick","praise","bread","operation","scene","bend","frankly","qualification","dodger"];
+const PART2 = [
+  "The coach ___ the players for their hard work yesterday.",
+  "Please ___ your knees when you lift heavy boxes.",
+  "Don't believe every ___ you hear online.",
+  "The doctor said the ___ went well, and he can go home next week.",
+  "My dog loves to ___ the ball when I throw it.",
+  "Five students were ___ from class because of the flu.",
+  "A strong ___ is coming, so we should stay indoors tonight.",
+  "Children should learn good table ___.",
+  "She smells nice. What ___ is she wearing?",
+  "___ speaking, I didn't enjoy the movie at all.",
+  "He made a ___ mistake and forgot to write his name on the test.",
+  "The fog was so ___ that we couldn't see the road.",
+  "Look through the ___ and choose the sofa you like.",
+  "You need a teaching ___ to work in a public school.",
+  "The reporters rushed to the ___ of the fire.",
+  "She ___ into tears when she heard the bad news.",
+  "Although he is a famous singer, he is still very ___.",
+  "Mom asked me to buy a loaf of ___ on my way home.",
+  "He is a tax ___; he never pays what he owes."
+];
+
+// ===== 解答：[可接受的答案..., 說明] =====
+const KEY1 = [
+  { accept: ["rumour", "rumor"], note: "英式 rumour／美式 rumor" },
+  { accept: ["thick"], note: "" },
+  { accept: ["fetch"], note: "" },
+  { accept: ["absent"], note: "" },
+  { accept: ["perfume"], note: "" },
+  { accept: ["frankly"], note: "" },
+  { accept: ["operation"], note: "" },
+  { accept: ["bread"], note: "" },
+  { accept: ["bend"], note: "" },
+  { accept: ["humble"], note: "" },
+  { accept: ["catalog", "catalogue"], note: "美式 catalog／英式 catalogue" },
+  { accept: ["storm"], note: "" },
+  { accept: ["careless"], note: "" },
+  { accept: ["qualification"], note: "" },
+  { accept: ["burst"], note: "" },
+  { accept: ["dodger"], note: "" },
+  { accept: ["scene"], note: "" },
+  { accept: ["praise"], note: "" },
+  { accept: ["manner", "manners"], note: "複數 manners 指「禮貌」" }
+];
+const KEY2 = [
+  { accept: ["praised"], note: "過去式（yesterday）" },
+  { accept: ["bend"], note: "" },
+  { accept: ["rumour", "rumor"], note: "" },
+  { accept: ["operation"], note: "" },
+  { accept: ["fetch"], note: "" },
+  { accept: ["absent"], note: "be absent from 缺席" },
+  { accept: ["storm"], note: "" },
+  { accept: ["manners"], note: "複數，「禮貌」" },
+  { accept: ["perfume"], note: "" },
+  { accept: ["frankly"], note: "frankly speaking 老實說" },
+  { accept: ["careless"], note: "" },
+  { accept: ["thick"], note: "" },
+  { accept: ["catalog", "catalogue"], note: "" },
+  { accept: ["qualification"], note: "" },
+  { accept: ["scene"], note: "" },
+  { accept: ["burst"], note: "過去式同形，burst into tears 突然哭出來" },
+  { accept: ["humble"], note: "" },
+  { accept: ["bread"], note: "不可數，a loaf of bread" },
+  { accept: ["dodger"], note: "" }
+];
+
+// ===== 產生題目 =====
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+$("part1").innerHTML = PART1.map((q, i) => `
+  <div class="col-sm-6">
+    <div class="input-group has-validation">
+      <span class="input-group-text">${i + 1}. ${esc(q)}</span>
+      <input type="text" class="form-control" id="p1-${i}" aria-label="${esc(q)}">
+      <div class="invalid-feedback" id="p1-${i}-fb"></div>
+    </div>
+  </div>`).join("");
+
+$("wordBank").innerHTML =
+  WORDS.map(w => `<span class="badge text-bg-light border font-monospace fw-normal">${w}</span>`).join("");
+
+$("part2").innerHTML = PART2.map((q, i) => {
+  const [a, b] = q.split("___");
+  return `
+  <li class="list-group-item">
+    <div class="d-inline-flex flex-wrap align-items-center gap-2">
+      <span>${esc(a)}</span>
+      <input type="text" class="form-control form-control-sm w-auto" id="p2-${i}" size="14">
+      <span>${esc(b)}</span>
+    </div>
+    <div class="small mt-1 text-danger d-none" id="p2-${i}-fb"></div>
+  </li>`;
+}).join("");
+
+// ===== 比對 =====
+const norm = s => s.trim().toLowerCase().replace(/\s+/g, " ");
+
+// 編輯距離，用來判斷是不是「拼錯」
+function distance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+
+function check(answer, key) {
+  const a = norm(answer);
+  const correct = key.accept.includes(a);
+  let reason = "";
+  if (!correct) {
+    if (!a) reason = "未作答";
+    else if (key.accept.some(k => k.startsWith(a) || a.startsWith(k) || distance(a, k) <= 2)) reason = "拼字或字形錯誤";
+  }
+  return { correct, reason };
+}
+
+function markInput(input, ok) {
+  input.classList.remove("is-valid", "is-invalid");
+  input.classList.add(ok ? "is-valid" : "is-invalid");
+}
+
+function feedback(key, reason) {
+  return [`正解：${key.accept.join(" / ")}`, key.note, reason].filter(Boolean).join("｜");
+}
+
+$("quiz").addEventListener("submit", e => {
+  e.preventDefault();
+  const wrong = [];
+  let ok1 = 0, ok2 = 0;
+
+  PART1.forEach((_, i) => {
+    const input = $(`p1-${i}`), key = KEY1[i], r = check(input.value, key);
+    markInput(input, r.correct);
+    $(`p1-${i}-fb`).textContent = feedback(key, r.reason);
+    r.correct ? ok1++ : wrong.push(key.accept[0]);
+  });
+
+  PART2.forEach((_, i) => {
+    const input = $(`p2-${i}`), key = KEY2[i], r = check(input.value, key), fb = $(`p2-${i}-fb`);
+    markInput(input, r.correct);
+    fb.textContent = feedback(key, r.reason);
+    fb.classList.toggle("d-none", r.correct);
+    r.correct ? ok2++ : wrong.push(key.accept[0]);
+  });
+
+  const total = PART1.length + PART2.length;
+  const score = Math.round((ok1 + ok2) / total * 100);
+  const color = score >= 80 ? "success" : score >= 60 ? "warning" : "danger";
+  const review = [...new Set(wrong)];
+
+  $("result").innerHTML = `
+    <div class="card border-${color}">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+          <span class="display-5 fw-bold text-${color}">${score}</span><span class="text-secondary">分</span>
+          <span class="ms-auto text-secondary">第一部分 ${ok1}/${PART1.length}　第二部分 ${ok2}/${PART2.length}</span>
+        </div>
+        <div class="progress mb-3" role="progressbar"><div class="progress-bar bg-${color}" style="width:${score}%"></div></div>
+        ${review.length
+          ? `<h6 class="fw-bold">建議複習的單字</h6>
+             <div class="d-flex flex-wrap gap-1">${review.map(w => `<span class="badge text-bg-danger fw-normal">${w}</span>`).join("")}</div>`
+          : `<p class="mb-0 text-success fw-bold">全部答對，太棒了！</p>`}
+      </div>
+    </div>`;
+  $("result").classList.remove("d-none");
+  $("retryBtn").classList.remove("d-none");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+$("retryBtn").addEventListener("click", () => {
+  $("quiz").reset();
+  document.querySelectorAll(".is-valid, .is-invalid").forEach(el => el.classList.remove("is-valid", "is-invalid"));
+  document.querySelectorAll("[id^='p2-'][id$='-fb']").forEach(el => el.classList.add("d-none"));
+  $("result").classList.add("d-none");
+  $("retryBtn").classList.add("d-none");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+</script>
+</body>
+</html>
