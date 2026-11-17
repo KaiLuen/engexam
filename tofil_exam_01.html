@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TOIL 01 測驗 - EngExam</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-body-tertiary">
+
+  <!-- Column -->
+  <div class="d-flex flex-column min-vh-100">
+
+    <!-- Appbar -->
+    <nav class="navbar bg-body border-bottom sticky-top">
+      <!-- Row: Brand + Spacing + Actions -->
+      <div class="container d-flex align-items-center">
+        <a class="navbar-brand fw-semibold" href="index.html">TOIL 01 測驗</a>
+        <div class="flex-grow-1"></div> <!-- Spacing -->
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          <a href="tofil_intro_01.html" class="btn btn-outline-primary btn-sm">單字</a>
+          <a href="index.html" class="btn btn-outline-secondary btn-sm">離開</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="container flex-grow-1 py-4">
+      <p class="text-secondary mb-4">直接在空格作答，完成後按最下方「交卷」批改。</p>
+
+      <!-- 成績 -->
+      <div id="result" class="d-none mb-4"></div>
+
+      <form id="quiz" autocomplete="off" spellcheck="false">
+
+        <!-- 第一部分 -->
+        <div class="card mb-4">
+          <div class="card-header fw-bold">第一部分：單字中翻英</div>
+          <div class="card-body">
+            <div class="row g-3" id="part1"></div>
+          </div>
+        </div>
+
+        <!-- 第二部分 -->
+        <div class="card mb-4">
+          <div class="card-header fw-bold">第二部分：英文句子填空</div>
+          <div class="card-body">
+            <div class="alert alert-secondary">
+              <p class="mb-2">從下列單字中選出最適合的填入空格，每個字只用一次。片語整組填入（例如 leave ~ behind 填 leave behind）。</p>
+              <div class="d-flex flex-wrap gap-1" id="wordBank"></div>
+            </div>
+            <ol class="list-group list-group-numbered" id="part2"></ol>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mb-3">
+          <button type="button" class="btn btn-outline-secondary d-none" id="retryBtn">重新作答</button>
+          <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">交卷</button>
+        </div>
+      </form>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===== 題目 =====
+const PART1 = ["總之；最後（總結用語）", "把……留下；拋下；忘了帶走", "保險", "麻煩；困擾", "中毒", "有效率的", "提倡者；擁護者；提倡、主張", "翻譯", "順其自然；隨遇而安", "繁文縟節；官僚程序", "沿著；一起", "同伴情誼；友情（= camaraderie）", "怪人；怪胎", "安全；保全；安檢", "導遊；指南；引導", "挫折；沮喪", "好處；利益；受益", "令人放鬆的", "確信的；被說服的", "有彈性的；靈活的", "兩全其美", "使……遠離；不讓……進入", "寵愛；悉心照顧；縱容", "令人興奮的；刺激的", "保護", "滑倒；溜走；小失誤", "預先安排好的", "刻板印象", "自在；放鬆", "促進；使便利", "熱鬧的；活潑的", "住宿", "交通；運輸", "預約；預訂", "獨立的；自主的", "談判；協商", "有特權的；榮幸的；優越的", "限制性的；拘束的", "全天候的；24 小時的", "友誼", "一餐；餐點", "無憂無慮的", "充分利用；從……獲得最大好處", "氣氛；大氣", "節慶的；歡樂的", "此外；另外", "扒手；扒竊", "明顯的", "自助旅行", "胡說八道；廢話", "有組織的；有條理的", "負面的；消極的", "首先；第一點（口語）", "確定地；肯定", "敲竹槓；坑錢（名詞 rip-off）"];
+const WORDS = ["efficient", "around-the-clock", "security", "atmosphere", "go with the flow", "obvious", "advocate", "transportation", "rip off", "flexible", "at ease", "comradery", "hogwash", "along", "meal", "independent", "leave ~ behind", "pre-arranged", "festive", "stereotype", "frustration", "privileged", "independent travel", "friendship", "negative", "pamper", "hassle", "accommodations", "translate", "in conclusion", "keep ... out of", "get the most out of", "for starters", "reservation", "pickpocket", "benefit", "weirdo", "negotiation", "slip", "insurance", "facilitate", "convinced", "guide", "red tape", "lively", "for sure", "the best of both worlds", "restrictive", "relaxing", "carefree", "in addition", "organized", "thrilling", "poisoning", "protect"];
+const PART2 = [
+  "I don't know ___, but I think the museum is closed on Mondays.",
+  "___, a tour is usually cheaper than planning a trip by yourself.",
+  "I'm ___ that traveling alone is safer than most people think.",
+  "Lisa is very ___ and likes to make her own travel plans.",
+  "Pack light and ___ anything you don't really need.",
+  "The hotel got many ___ reviews because the rooms were dirty.",
+  "Always buy travel ___ before you go abroad.",
+  "The idea that all tourists are rude is just a ___.",
+  "Be careful not to ___ on the wet floor.",
+  "We felt ___ to watch the private dance show.",
+  "The night market is always ___ and crowded.",
+  "The trip was well ___, and everything happened on time.",
+  "Carrying heavy luggage up the stairs was a real ___.",
+  "Don't plan every minute of your vacation; just ___.",
+  "On a luxury cruise, the staff will ___ you all day long.",
+  "Getting a visa involves a lot of ___.",
+  "A ___ stole my wallet on the crowded subway.",
+  "All the hotels and meals on the tour are ___, so you don't have to plan anything.",
+  "After a long ___, the driver agreed to lower the price.",
+  "The hotel is cheap. ___, it is close to the station.",
+  "We had to wait in a long line at airport ___.",
+  "A hot bath after a long day of sightseeing is very ___.",
+  "I made a ___ at the restaurant for seven o'clock.",
+  "The tour was very ___; we saw five cities in one week.",
+  "Wear sunscreen to ___ your skin from the sun.",
+  "She cried with ___ when she missed the last train.",
+  "Some taxi drivers try to ___ tourists by taking longer routes.",
+  "A semi-guided tour gives you ___: some guidance and some freedom.",
+  "___ lets you decide where to go and how long to stay.",
+  "Riding the roller coaster was a ___ experience.",
+  "He says all tour groups are boring, but that's ___.",
+  "The small café has a warm and cozy ___.",
+  "___, both kinds of travel have their own advantages.",
+  "It was ___ that he had never traveled abroad before. He forgot his passport!",
+  "We spent a ___ summer at the beach with no plans at all.",
+  "Plan ahead so you can ___ your short trip.",
+  "Public ___ in Tokyo is fast and convenient.",
+  "My uncle is a strong ___ of package tours.",
+  "A local guide can ___ communication with people in small villages.",
+  "Can you ___ this menu into English for me?",
+  "The friendly hotel staff made us feel ___ right away.",
+  "We walked ___ the river and took lots of pictures.",
+  "The tour schedule was too ___; we had no free time at all.",
+  "The streets were full of lights and music, creating a ___ mood.",
+  "He got food ___ after eating some bad seafood.",
+  "There was a strong sense of ___ among the members of our tour group.",
+  "Our ___ began on a bus tour in Italy ten years ago.",
+  "Tourists should ___ dark alleys at night.",
+  "The hotel offers ___ room service.",
+  "The price includes flights and ___ in four-star hotels.",
+  "Breakfast is the only ___ included in the price.",
+  "Traveling alone is more ___ because you can change your plans anytime.",
+  "The man at the next table kept staring at us. What a ___!",
+  "One ___ of a group tour is that you can make new friends.",
+  "Our tour ___ told us the history of the old temple."
+];
+
+// ===== 解答：[可接受的答案..., 說明] =====
+const KEY1 = [
+  {"accept": ["in conclusion"], "note": ""},
+  {"accept": ["leave behind"], "note": ""},
+  {"accept": ["insurance"], "note": ""},
+  {"accept": ["hassle"], "note": ""},
+  {"accept": ["poisoning"], "note": ""},
+  {"accept": ["efficient"], "note": ""},
+  {"accept": ["advocate"], "note": ""},
+  {"accept": ["translate"], "note": ""},
+  {"accept": ["go with the flow"], "note": ""},
+  {"accept": ["red tape"], "note": ""},
+  {"accept": ["along"], "note": ""},
+  {"accept": ["comradery", "camaraderie"], "note": "較常見的拼法是 camaraderie"},
+  {"accept": ["weirdo"], "note": ""},
+  {"accept": ["security"], "note": ""},
+  {"accept": ["guide"], "note": ""},
+  {"accept": ["frustration"], "note": ""},
+  {"accept": ["benefit"], "note": ""},
+  {"accept": ["relaxing"], "note": ""},
+  {"accept": ["convinced"], "note": ""},
+  {"accept": ["flexible"], "note": ""},
+  {"accept": ["the best of both worlds"], "note": ""},
+  {"accept": ["keep out of"], "note": ""},
+  {"accept": ["pamper"], "note": ""},
+  {"accept": ["thrilling"], "note": ""},
+  {"accept": ["protect"], "note": ""},
+  {"accept": ["slip"], "note": ""},
+  {"accept": ["pre-arranged", "prearranged"], "note": ""},
+  {"accept": ["stereotype"], "note": ""},
+  {"accept": ["at ease"], "note": ""},
+  {"accept": ["facilitate"], "note": ""},
+  {"accept": ["lively"], "note": ""},
+  {"accept": ["accommodations", "accommodation"], "note": "美式常用複數 accommodations"},
+  {"accept": ["transportation"], "note": ""},
+  {"accept": ["reservation"], "note": ""},
+  {"accept": ["independent"], "note": ""},
+  {"accept": ["negotiation"], "note": "注意拼字：nego-ti-ation"},
+  {"accept": ["privileged"], "note": ""},
+  {"accept": ["restrictive"], "note": ""},
+  {"accept": ["around-the-clock", "around the clock"], "note": ""},
+  {"accept": ["friendship"], "note": ""},
+  {"accept": ["meal"], "note": ""},
+  {"accept": ["carefree"], "note": ""},
+  {"accept": ["get the most out of"], "note": ""},
+  {"accept": ["atmosphere"], "note": ""},
+  {"accept": ["festive"], "note": ""},
+  {"accept": ["in addition"], "note": ""},
+  {"accept": ["pickpocket"], "note": ""},
+  {"accept": ["obvious"], "note": ""},
+  {"accept": ["independent travel"], "note": ""},
+  {"accept": ["hogwash"], "note": ""},
+  {"accept": ["organized"], "note": ""},
+  {"accept": ["negative"], "note": ""},
+  {"accept": ["for starters"], "note": ""},
+  {"accept": ["for sure"], "note": ""},
+  {"accept": ["rip off", "rip-off"], "note": "動詞片語 rip off；名詞 a rip-off"}
+];
+const KEY2 = [
+  {"accept": ["for sure"], "note": "don't know for sure 不確定"},
+  {"accept": ["for starters"], "note": "句首，用來列舉第一個理由"},
+  {"accept": ["convinced"], "note": "be convinced that 確信……"},
+  {"accept": ["independent"], "note": ""},
+  {"accept": ["leave behind"], "note": "受詞較長時可放在 behind 後面"},
+  {"accept": ["negative"], "note": "negative reviews 負評"},
+  {"accept": ["insurance"], "note": "travel insurance 旅遊平安險"},
+  {"accept": ["stereotype"], "note": ""},
+  {"accept": ["slip"], "note": "not to 後接原形"},
+  {"accept": ["privileged"], "note": "feel privileged to 很榮幸能……"},
+  {"accept": ["lively"], "note": "lively 是形容詞，不是副詞"},
+  {"accept": ["organized"], "note": "well organized 安排得很好"},
+  {"accept": ["hassle"], "note": "a real hassle 真麻煩"},
+  {"accept": ["go with the flow"], "note": "just 後接原形"},
+  {"accept": ["pamper"], "note": "will 後接原形"},
+  {"accept": ["red tape"], "note": "不可數，a lot of red tape"},
+  {"accept": ["pickpocket"], "note": ""},
+  {"accept": ["pre-arranged", "prearranged"], "note": ""},
+  {"accept": ["negotiation"], "note": "注意拼字：nego-ti-ation"},
+  {"accept": ["in addition"], "note": "句首轉折，後加逗號"},
+  {"accept": ["security"], "note": "airport security 機場安檢"},
+  {"accept": ["relaxing"], "note": "-ing 形容事物「令人放鬆」；人感到放鬆用 relaxed"},
+  {"accept": ["reservation"], "note": "make a reservation 預約"},
+  {"accept": ["efficient"], "note": ""},
+  {"accept": ["protect"], "note": "protect A from B 保護 A 免受 B"},
+  {"accept": ["frustration"], "note": "with frustration 沮喪地"},
+  {"accept": ["rip off"], "note": "try to 後接原形；這裡是動詞片語"},
+  {"accept": ["the best of both worlds"], "note": ""},
+  {"accept": ["independent travel"], "note": ""},
+  {"accept": ["thrilling"], "note": "-ing 形容事物「令人興奮」；人感到興奮用 thrilled"},
+  {"accept": ["hogwash"], "note": "不可數，不加 a"},
+  {"accept": ["atmosphere"], "note": ""},
+  {"accept": ["in conclusion"], "note": "句首總結，後加逗號"},
+  {"accept": ["obvious"], "note": "It is obvious that…… 很明顯……"},
+  {"accept": ["carefree"], "note": ""},
+  {"accept": ["get the most out of"], "note": "can 後接原形"},
+  {"accept": ["transportation"], "note": "public transportation 大眾運輸"},
+  {"accept": ["advocate"], "note": "a strong advocate of 強力擁護……"},
+  {"accept": ["facilitate"], "note": "can 後接原形"},
+  {"accept": ["translate"], "note": "translate A into B 把 A 翻成 B"},
+  {"accept": ["at ease"], "note": "feel at ease 感到自在"},
+  {"accept": ["along"], "note": "walk along 沿著……走"},
+  {"accept": ["restrictive"], "note": ""},
+  {"accept": ["festive"], "note": ""},
+  {"accept": ["poisoning"], "note": "food poisoning 食物中毒"},
+  {"accept": ["comradery", "camaraderie"], "note": "a sense of comradery 同伴情誼"},
+  {"accept": ["friendship"], "note": ""},
+  {"accept": ["keep out of"], "note": "不及物用法：keep out of + 地方"},
+  {"accept": ["around-the-clock", "around the clock"], "note": "放在名詞前當形容詞時要加連字號"},
+  {"accept": ["accommodations", "accommodation"], "note": "注意拼字：兩個 c、兩個 m"},
+  {"accept": ["meal"], "note": ""},
+  {"accept": ["flexible"], "note": ""},
+  {"accept": ["weirdo"], "note": ""},
+  {"accept": ["benefit"], "note": "one benefit of ……的一個好處"},
+  {"accept": ["guide"], "note": "tour guide 導遊"}
+];
+
+// ===== 產生題目 =====
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+$("part1").innerHTML = PART1.map((q, i) => `
+  <div class="col-sm-6">
+    <div class="input-group has-validation">
+      <span class="input-group-text">${i + 1}. ${esc(q)}</span>
+      <input type="text" class="form-control" id="p1-${i}" aria-label="${esc(q)}">
+      <div class="invalid-feedback" id="p1-${i}-fb"></div>
+    </div>
+  </div>`).join("");
+
+$("wordBank").innerHTML =
+  WORDS.map(w => `<span class="badge text-bg-light border font-monospace fw-normal">${w}</span>`).join("");
+
+$("part2").innerHTML = PART2.map((q, i) => {
+  const [a, b] = q.split("___");
+  return `
+  <li class="list-group-item">
+    <div class="d-inline-flex flex-wrap align-items-center gap-2">
+      <span>${esc(a)}</span>
+      <input type="text" class="form-control form-control-sm w-auto" id="p2-${i}" size="20">
+      <span>${esc(b)}</span>
+    </div>
+    <div class="small mt-1 text-danger d-none" id="p2-${i}-fb"></div>
+  </li>`;
+}).join("");
+
+// ===== 比對 =====
+const norm = s => s.trim().toLowerCase().replace(/[\u2018\u2019]/g, "'")
+  .replace(/~|\u2026|\.{2,}/g, " ").replace(/[.,!?;:]+$/, "").replace(/\s+/g, " ").trim();
+
+// 編輯距離，用來判斷是不是「拼錯」
+function distance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+
+function check(answer, key) {
+  const a = norm(answer);
+  const correct = key.accept.includes(a);
+  let reason = "";
+  if (!correct) {
+    if (!a) reason = "未作答";
+    else if (key.accept.some(k => k.startsWith(a) || a.startsWith(k) || distance(a, k) <= 2)) reason = "拼字或字形錯誤";
+  }
+  return { correct, reason };
+}
+
+function markInput(input, ok) {
+  input.classList.remove("is-valid", "is-invalid");
+  input.classList.add(ok ? "is-valid" : "is-invalid");
+}
+
+function feedback(key, reason) {
+  return [`正解：${key.accept.join(" / ")}`, key.note, reason].filter(Boolean).join("｜");
+}
+
+$("quiz").addEventListener("submit", e => {
+  e.preventDefault();
+  const wrong = [];
+  let ok1 = 0, ok2 = 0;
+
+  PART1.forEach((_, i) => {
+    const input = $(`p1-${i}`), key = KEY1[i], r = check(input.value, key);
+    markInput(input, r.correct);
+    $(`p1-${i}-fb`).textContent = feedback(key, r.reason);
+    r.correct ? ok1++ : wrong.push(key.accept[0]);
+  });
+
+  PART2.forEach((_, i) => {
+    const input = $(`p2-${i}`), key = KEY2[i], r = check(input.value, key), fb = $(`p2-${i}-fb`);
+    markInput(input, r.correct);
+    fb.textContent = feedback(key, r.reason);
+    fb.classList.toggle("d-none", r.correct);
+    r.correct ? ok2++ : wrong.push(key.accept[0]);
+  });
+
+  const total = PART1.length + PART2.length;
+  const score = Math.round((ok1 + ok2) / total * 100);
+  const color = score >= 80 ? "success" : score >= 60 ? "warning" : "danger";
+  const review = [...new Set(wrong)];
+
+  $("result").innerHTML = `
+    <div class="card border-${color}">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+          <span class="display-5 fw-bold text-${color}">${score}</span><span class="text-secondary">分</span>
+          <span class="ms-auto text-secondary">第一部分 ${ok1}/${PART1.length}　第二部分 ${ok2}/${PART2.length}</span>
+        </div>
+        <div class="progress mb-3" role="progressbar"><div class="progress-bar bg-${color}" style="width:${score}%"></div></div>
+        ${review.length
+          ? `<h6 class="fw-bold">建議複習的單字</h6>
+             <div class="d-flex flex-wrap gap-1">${review.map(w => `<span class="badge text-bg-danger fw-normal">${w}</span>`).join("")}</div>`
+          : `<p class="mb-0 text-success fw-bold">全部答對，太棒了！</p>`}
+      </div>
+    </div>`;
+  $("result").classList.remove("d-none");
+  $("retryBtn").classList.remove("d-none");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+$("retryBtn").addEventListener("click", () => {
+  $("quiz").reset();
+  document.querySelectorAll(".is-valid, .is-invalid").forEach(el => el.classList.remove("is-valid", "is-invalid"));
+  document.querySelectorAll("[id^='p2-'][id$='-fb']").forEach(el => el.classList.add("d-none"));
+  $("result").classList.add("d-none");
+  $("retryBtn").classList.add("d-none");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+</script>
+</body>
+</html>
