@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>單字王 04 測驗 - EngExam</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-body-tertiary">
+
+  <!-- Column -->
+  <div class="d-flex flex-column min-vh-100">
+
+    <!-- Appbar -->
+    <nav class="navbar bg-body border-bottom sticky-top">
+      <!-- Row: Brand + Spacing + Actions -->
+      <div class="container d-flex align-items-center">
+        <a class="navbar-brand fw-semibold" href="index.html">單字王 04 測驗</a>
+        <div class="flex-grow-1"></div> <!-- Spacing -->
+        <!-- Actions -->
+        <div class="d-flex gap-2">
+          <a href="keywordking_intro_04.html" class="btn btn-outline-primary btn-sm">單字</a>
+          <a href="index.html" class="btn btn-outline-secondary btn-sm">離開</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="container flex-grow-1 py-4">
+      <p class="text-secondary mb-4">直接在空格作答，完成後按最下方「交卷」批改。</p>
+
+      <!-- 成績 -->
+      <div id="result" class="d-none mb-4"></div>
+
+      <form id="quiz" autocomplete="off" spellcheck="false">
+
+        <!-- 第一部分 -->
+        <div class="card mb-4">
+          <div class="card-header fw-bold">第一部分：單字中翻英</div>
+          <div class="card-body">
+            <div class="row g-3" id="part1"></div>
+          </div>
+        </div>
+
+        <!-- 第二部分 -->
+        <div class="card mb-4">
+          <div class="card-header fw-bold">第二部分：英文句子填空</div>
+          <div class="card-body">
+            <div class="alert alert-secondary">
+              <p class="mb-2">從下列單字中選出最適合的填入空格，每個字只用一次。</p>
+              <div class="d-flex flex-wrap gap-1" id="wordBank"></div>
+            </div>
+            <ol class="list-group list-group-numbered" id="part2"></ol>
+          </div>
+        </div>
+
+        <div class="d-grid gap-2 d-sm-flex justify-content-sm-end mb-3">
+          <button type="button" class="btn btn-outline-secondary d-none" id="retryBtn">重新作答</button>
+          <button type="submit" class="btn btn-primary btn-lg px-5" id="submitBtn">交卷</button>
+        </div>
+      </form>
+    </main>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ===== 題目 =====
+const PART1 = ["禮貌；禮節；好意（courtesy of 承蒙……提供）", "一把；少數", "認出；承認；表揚、肯定", "一堆；大量；堆積", "給予……權利（資格）；為（書、文章）命名", "削尖；磨利；使敏銳", "皮革；皮製的", "水管；軟管；用水管沖洗", "文學；文獻", "違反；侵犯", "衛星；人造衛星", "山頂；頂峰；高峰期", "給……穿衣；供給衣服", "十年", "巨大的；廣闊的；大量的", "說教的；愛講大道理的；（言辭）簡潔精闢的", "紀念品", "信件；公文（正式或帶幽默的說法）", "步調；速度；踱步"];
+const WORDS = ["pace", "hose", "leather", "entitle", "clothe", "literature", "satellite", "sententious", "vast", "missive", "courtesy", "decade", "peak", "recognition", "sharpen", "heap", "handful", "violation", "souvenir"];
+const PART2 = [
+  "Russia is a ___ country with eleven time zones.",
+  "Walk at your own ___; this isn't a race.",
+  "Only a ___ of students passed the difficult exam.",
+  "Does this ticket ___ me to a free drink?",
+  "I need to ___ my pencil before the test begins.",
+  "Running a red light is a traffic ___.",
+  "It costs a lot of money to feed and ___ a family of five.",
+  "The weather ___ sends pictures of the clouds back to Earth.",
+  "There was a ___ of dirty dishes in the sink.",
+  "Dad watered the garden with a ___.",
+  "It took us five hours to reach the ___ of the mountain.",
+  "She won an award in ___ of her work for the community.",
+  "It's common ___ to hold the door for the person behind you.",
+  "Shakespeare is one of the most famous writers in English ___.",
+  "Nobody enjoyed his ___ speech full of moral lessons.",
+  "I bought a key chain as a ___ of my trip to Paris.",
+  "Smartphones have changed our lives a lot in the past ___.",
+  "These ___ shoes are expensive, but they will last for years.",
+  "The boss sent a long ___ to all employees about the new rules."
+];
+
+// ===== 解答：[可接受的答案..., 說明] =====
+const KEY1 = [
+  {"accept": ["courtesy"], "note": "注意拼字：cour-te-sy"},
+  {"accept": ["handful"], "note": "a handful of 少數的……"},
+  {"accept": ["recognition"], "note": ""},
+  {"accept": ["heap"], "note": ""},
+  {"accept": ["entitle"], "note": "be entitled to 有權得到……"},
+  {"accept": ["sharpen"], "note": ""},
+  {"accept": ["leather"], "note": ""},
+  {"accept": ["hose"], "note": ""},
+  {"accept": ["literature"], "note": "注意拼字：lit-er-a-ture"},
+  {"accept": ["violation"], "note": ""},
+  {"accept": ["satellite"], "note": "注意拼字：兩個 l"},
+  {"accept": ["peak"], "note": "peak hours 尖峰時段"},
+  {"accept": ["clothe"], "note": "clothe 是動詞；cloth 是布料，clothes 是衣服"},
+  {"accept": ["decade"], "note": ""},
+  {"accept": ["vast"], "note": ""},
+  {"accept": ["sententious"], "note": "注意拼字：sen-ten-tious"},
+  {"accept": ["souvenir"], "note": "注意拼字：sou-ve-nir"},
+  {"accept": ["missive"], "note": "一般的信用 letter 即可"},
+  {"accept": ["pace"], "note": ""}
+];
+const KEY2 = [
+  {"accept": ["vast"], "note": "a vast country 幅員遼闊的國家"},
+  {"accept": ["pace"], "note": "at your own pace 按自己的步調"},
+  {"accept": ["handful"], "note": "a handful of 少數的……"},
+  {"accept": ["entitle"], "note": "entitle sb to sth 使某人有權得到……；does 後接原形"},
+  {"accept": ["sharpen"], "note": "need to 後接原形"},
+  {"accept": ["violation"], "note": "traffic violation 交通違規"},
+  {"accept": ["clothe"], "note": "feed and clothe 供吃供穿；to 後接原形動詞，不是 clothes"},
+  {"accept": ["satellite"], "note": "weather satellite 氣象衛星"},
+  {"accept": ["heap"], "note": "a heap of 一堆……；口語 heaps of 很多"},
+  {"accept": ["hose"], "note": "garden hose 澆花水管"},
+  {"accept": ["peak"], "note": "the peak of the mountain 山頂"},
+  {"accept": ["recognition"], "note": "in recognition of 為了表揚……"},
+  {"accept": ["courtesy"], "note": "common courtesy 基本禮貌"},
+  {"accept": ["literature"], "note": "English literature 英國文學"},
+  {"accept": ["sententious"], "note": "形容詞，修飾 speech"},
+  {"accept": ["souvenir"], "note": "as a souvenir of 作為……的紀念品"},
+  {"accept": ["decade"], "note": "the past decade 過去十年"},
+  {"accept": ["leather"], "note": "名詞當形容詞用，leather shoes 皮鞋"},
+  {"accept": ["missive"], "note": "正式或帶幽默感的用字，一般信件用 letter"}
+];
+
+// ===== 產生題目 =====
+const $ = id => document.getElementById(id);
+const esc = s => s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+$("part1").innerHTML = PART1.map((q, i) => `
+  <div class="col-sm-6">
+    <div class="input-group has-validation">
+      <span class="input-group-text">${i + 1}. ${esc(q)}</span>
+      <input type="text" class="form-control" id="p1-${i}" aria-label="${esc(q)}">
+      <div class="invalid-feedback" id="p1-${i}-fb"></div>
+    </div>
+  </div>`).join("");
+
+$("wordBank").innerHTML =
+  WORDS.map(w => `<span class="badge text-bg-light border font-monospace fw-normal">${w}</span>`).join("");
+
+$("part2").innerHTML = PART2.map((q, i) => {
+  const [a, b] = q.split("___");
+  return `
+  <li class="list-group-item">
+    <div class="d-inline-flex flex-wrap align-items-center gap-2">
+      <span>${esc(a)}</span>
+      <input type="text" class="form-control form-control-sm w-auto" id="p2-${i}" size="14">
+      <span>${esc(b)}</span>
+    </div>
+    <div class="small mt-1 text-danger d-none" id="p2-${i}-fb"></div>
+  </li>`;
+}).join("");
+
+// ===== 比對 =====
+const norm = s => s.trim().toLowerCase().replace(/\s+/g, " ");
+
+// 編輯距離，用來判斷是不是「拼錯」
+function distance(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return d[a.length][b.length];
+}
+
+function check(answer, key) {
+  const a = norm(answer);
+  const correct = key.accept.includes(a);
+  let reason = "";
+  if (!correct) {
+    if (!a) reason = "未作答";
+    else if (key.accept.some(k => k.startsWith(a) || a.startsWith(k) || distance(a, k) <= 2)) reason = "拼字或字形錯誤";
+  }
+  return { correct, reason };
+}
+
+function markInput(input, ok) {
+  input.classList.remove("is-valid", "is-invalid");
+  input.classList.add(ok ? "is-valid" : "is-invalid");
+}
+
+function feedback(key, reason) {
+  return [`正解：${key.accept.join(" / ")}`, key.note, reason].filter(Boolean).join("｜");
+}
+
+$("quiz").addEventListener("submit", e => {
+  e.preventDefault();
+  const wrong = [];
+  let ok1 = 0, ok2 = 0;
+
+  PART1.forEach((_, i) => {
+    const input = $(`p1-${i}`), key = KEY1[i], r = check(input.value, key);
+    markInput(input, r.correct);
+    $(`p1-${i}-fb`).textContent = feedback(key, r.reason);
+    r.correct ? ok1++ : wrong.push(key.accept[0]);
+  });
+
+  PART2.forEach((_, i) => {
+    const input = $(`p2-${i}`), key = KEY2[i], r = check(input.value, key), fb = $(`p2-${i}-fb`);
+    markInput(input, r.correct);
+    fb.textContent = feedback(key, r.reason);
+    fb.classList.toggle("d-none", r.correct);
+    r.correct ? ok2++ : wrong.push(key.accept[0]);
+  });
+
+  const total = PART1.length + PART2.length;
+  const score = Math.round((ok1 + ok2) / total * 100);
+  const color = score >= 80 ? "success" : score >= 60 ? "warning" : "danger";
+  const review = [...new Set(wrong)];
+
+  $("result").innerHTML = `
+    <div class="card border-${color}">
+      <div class="card-body">
+        <div class="d-flex flex-wrap align-items-baseline gap-3 mb-2">
+          <span class="display-5 fw-bold text-${color}">${score}</span><span class="text-secondary">分</span>
+          <span class="ms-auto text-secondary">第一部分 ${ok1}/${PART1.length}　第二部分 ${ok2}/${PART2.length}</span>
+        </div>
+        <div class="progress mb-3" role="progressbar"><div class="progress-bar bg-${color}" style="width:${score}%"></div></div>
+        ${review.length
+          ? `<h6 class="fw-bold">建議複習的單字</h6>
+             <div class="d-flex flex-wrap gap-1">${review.map(w => `<span class="badge text-bg-danger fw-normal">${w}</span>`).join("")}</div>`
+          : `<p class="mb-0 text-success fw-bold">全部答對，太棒了！</p>`}
+      </div>
+    </div>`;
+  $("result").classList.remove("d-none");
+  $("retryBtn").classList.remove("d-none");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+$("retryBtn").addEventListener("click", () => {
+  $("quiz").reset();
+  document.querySelectorAll(".is-valid, .is-invalid").forEach(el => el.classList.remove("is-valid", "is-invalid"));
+  document.querySelectorAll("[id^='p2-'][id$='-fb']").forEach(el => el.classList.add("d-none"));
+  $("result").classList.add("d-none");
+  $("retryBtn").classList.add("d-none");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+</script>
+</body>
+</html>
